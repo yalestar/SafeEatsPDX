@@ -1,4 +1,8 @@
 SafeEatsPDX::Application.routes.draw do
+  resources :inspections
+
+  resources :restaurants
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
