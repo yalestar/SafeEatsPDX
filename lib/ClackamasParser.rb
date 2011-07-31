@@ -38,13 +38,12 @@ class ClackamasParser
     inspections = inspections_block.children.each do |i|
       if i.is_a?(Nokogiri::XML::Text) && !(i.text.strip =~ /\(\d+\)/.nil?) 
         score = i.text.gsub("(", "").gsub(")", "")
-        puts score  
       elsif i.is_a?(Nokogiri::XML::Element) && i.name == 'a'
         report_link = i.attributes["href"].value
         puts report_link
       end
-
     end
+      puts "Score: #{score} -> Report: #{report_link}"
   end
 
 
