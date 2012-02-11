@@ -1,2 +1,0 @@
-class InspectionsController < ApplicationController
-end

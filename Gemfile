@@ -1,8 +1,15 @@
-source 'http://rubygems.org'
+require 'rubygems'
+require 'mongo'
+source 'http://gemcutter.org'
 
-gem 'rails', '3.0.5'
+gem "rails", "3.0.0"
+gem "mongo_mapper"
 gem 'nokogiri'
 gem 'mechanize'
-gem 'sqlite3'
 gem 'jquery-rails'
-gem 'faker'
+
+group :development do 
+	gem 'faker'
+	gem 'rails-dev-boost', :git => 'git://github.com/thedarkone/rails-dev-boost.git', :require => 'rails_development_boost'  
+	gem 'ruby-debug19'
+end
