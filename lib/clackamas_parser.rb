@@ -5,6 +5,11 @@ class ClackamasParser
   require 'mechanize'
 
   class << self
+
+    def titleize(str)
+      str.split(/(\W)/).map(&:capitalize).join
+    end
+
     def run_parser
       url = "http://www.clackamas.us/healthapp/ri.jsp"
       agent = Mechanize.new
@@ -13,11 +18,9 @@ class ClackamasParser
       # TODO: some sort of alert if the page DOM changes at all
       full_list = form.submit
 
-      link_root = "http://www.clackamas.us/healthapp/ri.jsp/"
-
       all_links = full_list.links.select{|l| l.href =~ /rim\.jsp\?q_ID=\d+/ }
 
-      all_links.first(1).each do |l|
+      all_links.each do |l|
 
         # we're essentially parsing this:
         # http://www.clackamas.us/healthapp/rim.jsp?q_ID=0310774B&q_iID=1400723
@@ -31,7 +34,15 @@ class ClackamasParser
         # Node
         name = info_block.first.children.first.text
         street = info_block.children[2].text
-        csz = info_block.children[4].text
+
+        # this is some bullshit here: sometimes
+        # there's an empty line between the address 
+        # and the rest of it
+        if !info_block.children[4].text.empty?
+          csz = info_block.children[4].text
+        else
+          csz = info_block.children[5].text
+        end 
         csz.gsub!("\r\n", "")
         # spaces in the returned string are actually nbsp
         nbsp = Nokogiri::HTML("&nbsp;").text
@@ -41,14 +52,14 @@ class ClackamasParser
         state = "OR"
 
         r = nil
-        if m = csz.match(/[A-Z ]*, OR 97\d{3}/)
-          city = m[1]
+        if m = csz.match(/([A-Z ]*), (OR) (97\d{3})/)
+          city = titleize(m[1]).strip
           zip = m[3]
           # TODO: phone number?
           # TODO: other formats?
           restaurant = Restaurant.create(:name => name, :street => street, 
-                                :city => city, :state => state,
-                                :zip => zip, :county => county)
+          :city => city, :state => state,
+          :zip => zip, :county => county)
 
         else  
           restaurant = Restaurant.create(:name => name, :state => state, :county => county)
@@ -64,22 +75,31 @@ class ClackamasParser
           # this is the comments and violations part
           bottom_table.each do |cell|
             kids = cell.children.search("td")
-            score = kids[1].text
-            vios = kids[2].text
-            puds = kids[3].text
-            # puts "VIOS: #{vios}"
-            # puts "PUDS: #{puds}"
+            insp_type = kids.shift.text
+            score = kids.shift.text
+            kids.shift # just the text Violations (the column header)
+            kids.shift # also just a header
+
+            violations = []
+            kids.each_slice(2) do |k|
+              vio = k.first.text
+              pd = k.last.text
+              
+              violations << Violation.new(:violation_text => vio, :point_deduction => pd)
+            end           
+
+
             inspection = Inspection.new(:inspection_date => idate, :score => score.split(":").last.to_i,
-            :url => i.href, :violations => vios, :point_deductions => puds)
-          
-              restaurant.inspections << inspection
-              restaurant.save
+            :url => i.href, :violations => violations)
+
+            restaurant.inspections << inspection
+            restaurant.save
           end
         end
 
       end
-    end
+    end # parser
 
-  end
+  end # class methods
 
-end
+end # class
