@@ -29,7 +29,6 @@ class ClackamasParser
         # the first tr's first td is 4 lines with the contact info separated by br
         # the second td is a list of the inspections links
         info_block = report.parser.search("//table[@border='0']/tr[1]/td[1]")
-        # inspections_block = report.parser.search("//table[@border='0']/tr[1]/td[2]")
         
         # Node
         name = info_block.first.children.first.text
@@ -55,8 +54,6 @@ class ClackamasParser
         if m = csz.match(/([A-Z ]*), (OR) (97\d{3})/)
           city = titleize(m[1]).strip
           zip = m[3]
-          # TODO: phone number?
-          # TODO: other formats?
           restaurant = Restaurant.create(:name => name, :street => street, 
           :city => city, :state => state,
           :zip => zip, :county => county)
@@ -88,9 +85,10 @@ class ClackamasParser
               violations << Violation.new(:violation_text => vio, :point_deduction => pd)
             end           
 
-
-            inspection = Inspection.new(:inspection_date => idate, :score => score.split(":").last.to_i,
-            :url => i.href, :violations => violations)
+            inspection = Inspection.new(:inspection_date => idate, 
+                                        :score => score.split(":").last.to_i,
+                                        :url => i.href, 
+                                        :violations => violations)
 
             restaurant.inspections << inspection
             restaurant.save
