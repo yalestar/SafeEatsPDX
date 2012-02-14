@@ -5,6 +5,7 @@ source 'http://gemcutter.org'
 gem "rails", "3.0.0"
 gem "mongo_mapper"
 gem 'geokit'
+gem 'graticule'
 gem 'nokogiri'
 gem 'mechanize'
 gem 'jquery-rails'

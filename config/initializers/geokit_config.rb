@@ -1,4 +1,3 @@
-puts "-="*80
 # These defaults are used in Geokit::Mappable.distance_to and in acts_as_mappable
 Geokit::default_units = :miles
 Geokit::default_formula = :sphere
@@ -6,7 +5,7 @@ Geokit::default_formula = :sphere
 # This is the timeout value in seconds to be used for calls to the geocoder web
 # services.  For no timeout at all, comment out the setting.  The timeout unit
 # is in seconds.
-Geokit::Geocoders::request_timeout = 3
+# Geokit::Geocoders::request_timeout = 3
 
 # These settings are used if web service calls must be routed through a proxy.
 # These setting can be nil if not needed, otherwise, addr and port must be
@@ -29,7 +28,7 @@ Geokit::Geocoders::google = 'ABQIAAAAnhu59mvwimSmpYGzlCrUEhTJQa0g3IQ9GZqIMmInSLz
 
 # You can also set multiple API KEYS for different domains that may be directed to this same application.
 # The domain from which the current user is being directed will automatically be updated for Geokit via
-# the GeocoderControl class, which gets it's begin filter mixed into the ActionController.
+# the GeocoderControl class, which gets its begin filter mixed into the ActionController.
 # You define these keys with a Hash as follows:
 #Geokit::Geocoders::google = { 'rubyonrails.org' => 'RUBY_ON_RAILS_API_KEY', 'ruby-docs.org' => 'RUBY_DOCS_API_KEY' }
 
@@ -58,7 +57,7 @@ Geokit::Geocoders::geocoder_ca = false
 # Be aware that there are Terms of Use restrictions on how you can use the
 # various geocoders.  Make sure you read up on relevant Terms of Use for each
 # geocoder you are going to use.
-Geokit::Geocoders::provider_order = [:google,:us]
+Geokit::Geocoders::provider_order = [:google,:yahoo, :us]
 
 # The IP provider order. Valid symbols are :ip,:geo_plugin.
 # As before, make sure you read up on relevant Terms of Use for each.

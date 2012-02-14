@@ -60,13 +60,7 @@ Mechanize.html_parser = Nokogiri::HTML
   end
 fetch_restaurants  
 #   def geocode_restaurants
-#     # ensure that the restaurant_coordinates table exists
-#     ScraperWiki.save_sqlite(unique_keys=[:restaurant_id], data={:restaurant_id => "0", :latitude => "0", :longitude => "0"}, table_name='restaurant_coordinates')
-#     ScraperWiki.sqliteexecute('DELETE FROM "restaurant_coordinates" WHERE restaurant_id = "0"')
-#     ScraperWiki.save_sqlite(unique_keys=[:id], data={:id => "0", :latitude => "0", :longitude => "0"}, table_name='restaurants')
-#     ScraperWiki.sqliteexecute('DELETE FROM "restaurants" WHERE id = "0"')
 
-#     restaurants = ScraperWiki.select("* from restaurants where latitude is null")
 #     restaurants.each do |restaurant|
 #       coordinates = ScraperWiki.select("latitude, longitude FROM restaurant_coordinates WHERE restaurant_id = '#{restaurant['id']}'")
 #       coordinates = coordinates.first

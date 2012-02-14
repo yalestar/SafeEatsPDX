@@ -1,133 +1,169 @@
-require 'mechanize'
-require 'nokogiri'
-require 'open-uri'
+class MultnomahParser
 
-Mechanize.html_parser = Nokogiri::HTML
-@agent = Mechanize.new
+	require 'mechanize'
+	require 'nokogiri'
+	require 'open-uri'
 
-def fetch_restaurants
-	search_page = @agent.get("http://www3.multco.us/MCHealthInspect/ListSearch.aspx")
+	Mechanize.html_parser = Nokogiri::HTML
+	@agent = Mechanize.new
 
-	puts "===> "
-	index_page = search_page.forms.first.submit( search_page.forms.first.buttons.first )
+	class << self
 
-	loop do
-		Nokogiri::HTML( index_page.body ).search('#ResultsDataGrid tr').each do |row|
-			if restaurant_data = parse_index_row(row)
+		def geocode_multnomah
 
-				
-				puts "Saved: #{restaurant_data[:name]}"
+			Restaurant.where(:county => "Multnomah").each do |r|
+				r.loc = geocode_restaurant(r)
+				puts "#{r.name} -> #{r.address} -> #{r.loc}"
+				r.save
 			end
 		end
 
-		break unless index_page.forms.first.buttons.select{|b| b.name == 'Next'}.first
+		def geocode_restaurant(restaurant)
 
-		successful = false
-		until successful do
+			return nil if restaurant['street_address'] == "&nbsp;"
+			address = restaurant.address
+			# geocode_url = 'http://tasks.arcgisonline.com/ArcGIS/rest/services/Locators/TA_Streets_US_10/GeocodeServer/findAddressCandidates?Single+Line+Input='+URI.escape(address)+'&outFields=&outSR=&f=json'
+			geocode_url = 'http://maps.googleapis.com/maps/api/geocode/json?address='+URI.escape(address)+'&sensor=false&output=json'
+			puts geocode_url
+
 			begin
-				index_page = click_button(index_page, 'Next')
-			rescue Timeout::Error => e
-				puts "[-!-] Timeout fetching page, retrying..."
-			rescue Net::HTTPInternalServerError => e
-				puts "[-!-] 500 Internal Server Error fetching page, retrying..."
-			else
-				successful = true
+				result_json = open(geocode_url).read
+				result = JSON.parse(result_json)
+			rescue Exception => e
+				puts "Error getting geocoder result: #{e.inspect}"
 			end
-		end
-	end
 
-	puts "==========================="
-end
-def parse_index_row(row)
-	return nil unless restaurant_id = row.search('a').count > 0 && row.search('a').attr('href').value.match(/id=(.*)/)
+			if result['candidates'] && !result['candidates'].empty? 
+				latitude = result['candidates'][0]['location']['y']
+				longitude = result['candidates'][0]['location']['x']
+			elsif result['status'] && result['status'] != 'ZERO_RESULTS'
+				latitude = result['results'][0]['geometry']['location']['lat']
+				longitude = result['results'][0]['geometry']['location']['lng']
+			end
 
-	Hash[
-		*[:id, :name, :street_address, :city, :zip_code].zip( 
-		[restaurant_id[1]] + row.search('td').map{|cell| cell.inner_html.gsub(%r{<.*?>}, "").strip} +[nil,nil]
-		).flatten
-	]
-end
+			coordinates = [latitude, longitude]
 
-def click_button(page, button_name)
-	page.forms.first.submit(
-	page.forms.first.buttons.select{|b| b.name == button_name}.first
-	)
-end
+		end # geocode_restaurants
 
-def fetch_inspections_for(restaurant)
-	url = "http://www3.multco.us/MCHealthInspect/ListSearch.aspx?id=#{restaurant['id']}"
-	puts "Fetching inspections for #{restaurant['name']} at #{url}"
-	inspection_page = @agent.get(url)
 
-	inspection_count = inspection_page.search('span#Label4 b').text.to_i
+		def fetch_restaurants
+			search_page = @agent.get("http://www3.multco.us/MCHealthInspect/ListSearch.aspx")
+			index_page = search_page.forms.first.submit( search_page.forms.first.buttons.first )
 
-	if inspection_count > 0
-		loop do
-			inspection_data = parse_inspection_page(inspection_page)
-			inspection_data[:restaurant_id] = restaurant['id']
-			notes = inspection_data.delete(:inspection_notes)
+			loop do
+				# this step loads all the Multnomah restaurants into the DB.
+				# the inspection parsing comes subsequently
+				Nokogiri::HTML( index_page.body ).search('#ResultsDataGrid tr').each do |row|
+					if restaurant_data = parse_index_row(row)
 
-			ScraperWiki.save_sqlite(unique_keys=[:id],
-			data=inspection_data,
-			table_name='inspections')
-			puts "Saved: #{inspection_data.inspect}"
+						restaurant = Restaurant.create(:name => restaurant_data[:name], :street => restaurant_data[:street_address], 
+						:city => restaurant_data[:city], :state => restaurant_data[:state],
+						:zip => restaurant_data[:zip_code], :county => "Multnomah")
+						puts "Saved: #{restaurant_data[:name]}"
+					end
+				end
 
-			ScraperWiki.save_sqlite(unique_keys=[:rule, :rule_violations, :violation_comments, :corrective_text, :corrective_comments],
-			data=notes,
-			table_name='inspection_notes')
-			puts "Saved: #{notes.inspect}"
+				break unless index_page.forms.first.buttons.select{|b| b.name == 'Next'}.first
 
-			break unless inspection_page.forms.first.buttons.select{|b| b.name == 'NextInspection'}.first
-
-			successful = false
-			until successful do
-				begin
-					inspection_page = click_button(inspection_page, 'NextInspection')
-				rescue Timeout::Error => e
-					puts "[-!-] Timeout fetching page, retrying..."
-				else
-					successful = true
+				successful = false
+				until successful do
+					begin
+						index_page = click_button(index_page, 'Next')
+					rescue Timeout::Error => e
+						puts "[-!-] Timeout fetching page; retrying..."
+					rescue Net::HTTPInternalServerError => e
+						puts "[-!-] 500 Internal Server Error fetching page; retrying..."
+					else
+						successful = true
+					end
 				end
 			end
-		end
-	end
-rescue Net::HTTP::Persistent::Error
-	puts "[-!-] Connection Reset fetching page, skipping..."
-rescue Net::HTTPInternalServerError
-	puts "[-!-] 500 Internal Server Error fetching page, skipping..."
-end
-
-private
+		end # fetch_restaurants
 
 
-def parse_inspection_page(inspection_page)
-	doc = Nokogiri::HTML(inspection_page.body)
-	rows = doc.search('#DetailsView table tr').map{|row| 
-		row.search('td, th').map{|cell| 
-			cell.inner_text.gsub(/\u00a0/,'').strip 
-		}
-	}
-	summary = Hash[*rows[0].zip(rows[1]).flatten]
-
-	notes = []
-	rows.each_with_index do |row, i|
-		if row.sort == ["", "Law/Rule", "Rule Violations", "Violation Comments"].sort
-			notes << {
-				:rule => rows[i+1][0],
-				:rule_violations => rows[i+1][1],
-				:violation_comments => rows[i+1][2],
-				:corrective_text => rows[i+3][1],
-				:corrective_comments => rows[i+3][1]
+		def parse_inspection_page(inspection_page)
+			doc = Nokogiri::HTML(inspection_page.body)
+			rows = doc.search('#DetailsView table tr').map{|row| 
+				row.search('td, th').map{ |cell| 
+					cell.inner_text.gsub(/\u00a0/,'').strip 
+				}
 			}
-		end
-	end
+			summary = Hash[*rows[0].zip(rows[1]).flatten]
 
-	return {
-		:id => summary["Inspection#"],
-		:type => summary["Type"],
-		:date => Date.strptime(summary["Date"], "%m/%d/%Y").to_s,
-		:score => summary["Final Score"].to_i > 0 ? summary["Final Score"].to_i : nil,
-		:inspection_notes => notes
-	}
-end
-end
+			notes = []
+			
+			violations = []
+			rows.each_with_index do |row, i|
+				if row.sort == ["", "Law/Rule", "Rule Violations", "Violation Comments"].sort
+					# no point deductions for multnomah?
+					violations << Violation.new(
+						:rule => rows[i+1][0], 
+						:violation_text => rows[i+1][1],
+						:violation_comments => rows[i+1][2], 
+						:corrective_text => rows[i+3][1],
+						:corrective_comments => rows[i+3][1] )
+				end
+			end
+
+			inspection = Inspection.new(
+				:inspection_id => summary["Inspection#"],
+				:inspection_type => summary["Type"],
+				:url => inspection_page.url,
+				:inspection_date => Date.strptime(summary["Date"], "%m/%d/%Y").to_s,
+				:score => summary["Final Score"].to_i > 0 ? summary["Final Score"].to_i : nil,
+				:notes => notes
+			)
+			inspection.violations << violations
+
+			inspection
+		end # parse_inspection_page
+
+		def fetch_inspections_for(restaurant)
+			url = "http://www3.multco.us/MCHealthInspect/ListSearch.aspx?id=#{restaurant['id']}"
+			puts "Fetching inspections for #{restaurant['name']} at #{url}"
+			inspection_page = @agent.get(url)
+
+			inspection_count = inspection_page.search('span#Label4 b').text.to_i
+
+			if inspection_count > 0
+				loop do
+					inspection = parse_inspection_page(inspection_page)
+					restaurant.inspections << inspection
+					restaurant.save
+					puts "Saved: #{restaurant.inspect}"
+
+					break unless inspection_page.forms.first.buttons.select{|b| b.name == 'NextInspection'}.first
+
+					successful = false
+					until successful do
+						begin
+							inspection_page = click_button(inspection_page, 'NextInspection')
+						rescue Timeout::Error => e
+							puts "[-!-] Timeout fetching page, retrying..."
+						else
+							successful = true
+						end
+					end
+				end
+			end
+		end # fetch_inspections_for
+
+		def parse_index_row(row)
+			return nil unless restaurant_id = row.search('a').count > 0 && row.search('a').attr('href').value.match(/id=(.*)/)
+
+			Hash[
+				*[:id, :name, :street_address, :city, :zip_code].zip( 
+				[restaurant_id[1]] + row.search('td').map{|cell| cell.inner_html.gsub(%r{<.*?>}, "").strip} +[nil,nil]
+				).flatten
+			]
+		end
+
+
+		def click_button(page, button_name)
+			page.forms.first.submit(
+			page.forms.first.buttons.select{|b| b.name == button_name}.first
+			)
+		end
+	end # class methods
+
+end # class

@@ -12,6 +12,8 @@ class ClackamasParser
 
     def run_parser
       url = "http://www.clackamas.us/healthapp/ri.jsp"
+      gc = Graticule.service(:google).new(GOOGLE_API_KEY)
+
       agent = Mechanize.new
       page = agent.get(url)
       form = page.forms.first
@@ -20,7 +22,7 @@ class ClackamasParser
 
       all_links = full_list.links.select{|l| l.href =~ /rim\.jsp\?q_ID=\d+/ }
 
-      all_links.each do |l|
+      all_links.first(50).each do |l|
 
         # we're essentially parsing this:
         # http://www.clackamas.us/healthapp/rim.jsp?q_ID=0310774B&q_iID=1400723
@@ -61,6 +63,14 @@ class ClackamasParser
         else  
           restaurant = Restaurant.create(:name => name, :state => state, :county => county)
 
+        end
+
+        # geocode that sum'bitch
+        begin
+          location = gc.locate(restaurant.address)
+          restaurant.loc = location.coordinates          
+        rescue Exception => e
+          puts "something missed"
         end
 
         inspection_links = report.links.select{|l| l.href =~ /rim\.jsp\?q_ID=\d+/ }

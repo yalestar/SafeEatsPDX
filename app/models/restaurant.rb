@@ -9,7 +9,7 @@ class Restaurant
      key :county, String
      key :state, String
      key :zip, String
-
+     key :loc, Array
 
      def address
      	"#{self.street}, #{self.city}, #{self.state} #{self.zip}"
