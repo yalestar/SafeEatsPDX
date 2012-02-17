@@ -3,28 +3,50 @@ class MultnomahParser
 	require 'mechanize'
 	require 'nokogiri'
 	require 'open-uri'
+	require 'geokit'
 
 	Mechanize.html_parser = Nokogiri::HTML
 	@agent = Mechanize.new
 
 	class << self
+		include Geokit::Geocoders
+
+		def geokit_geocode
+			pass = 0
+			total = 0
+			Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 }).each do |r|
+				total += 1
+				res = MultiGeocoder.geocode(r.address)
+				if res
+					r.loc = res.ll.split
+					puts "#{r.name} -> #{r.address} -> #{r.loc}"
+					r.save
+					pass += 1
+				end
+
+			end
+			
+			puts "Total: #{total} | Succeeded: #{pass} (#{(total/pass)*100}%)"
+		end
+
 
 		def geocode_multnomah
 
-			Restaurant.where(:county => "Multnomah").each do |r|
+			Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 }).each do |r|
 				r.loc = geocode_restaurant(r)
 				puts "#{r.name} -> #{r.address} -> #{r.loc}"
 				r.save
 			end
 		end
 
+
 		def geocode_restaurant(restaurant)
 
 			return nil if restaurant['street_address'] == "&nbsp;"
 			address = restaurant.address
-			# geocode_url = 'http://tasks.arcgisonline.com/ArcGIS/rest/services/Locators/TA_Streets_US_10/GeocodeServer/findAddressCandidates?Single+Line+Input='+URI.escape(address)+'&outFields=&outSR=&f=json'
-			geocode_url = 'http://maps.googleapis.com/maps/api/geocode/json?address='+URI.escape(address)+'&sensor=false&output=json'
-			puts geocode_url
+			geocode_url = "http://maps.googleapis.com/maps/api/"
+			geocode_url += "geocode/json?address=#{URI.escape(address)}"
+			geocode_url += "&sensor=false&output=json"
 
 			begin
 				result_json = open(geocode_url).read
@@ -36,12 +58,18 @@ class MultnomahParser
 			if result['candidates'] && !result['candidates'].empty? 
 				latitude = result['candidates'][0]['location']['y']
 				longitude = result['candidates'][0]['location']['x']
+				coordinates = [latitude, longitude]
 			elsif result['status'] && result['status'] != 'ZERO_RESULTS'
-				latitude = result['results'][0]['geometry']['location']['lat']
-				longitude = result['results'][0]['geometry']['location']['lng']
+				begin
+					latitude = result['results'][0]['geometry']['location']['lat']
+					longitude = result['results'][0]['geometry']['location']['lng']
+					coordinates = [latitude, longitude]					
+				rescue Exception => e
+					puts "crapped out on #{result}"
+				end
 			end
-
-			coordinates = [latitude, longitude]
+			
+			coordinates
 
 		end # geocode_restaurants
 
@@ -56,7 +84,8 @@ class MultnomahParser
 				Nokogiri::HTML( index_page.body ).search('#ResultsDataGrid tr').each do |row|
 					if restaurant_data = parse_index_row(row)
 
-						restaurant = Restaurant.create(:name => restaurant_data[:name], :street => restaurant_data[:street_address], 
+						restaurant = Restaurant.create(:name => restaurant_data[:name], 
+						:street => restaurant_data[:street_address], 
 						:city => restaurant_data[:city], :state => restaurant_data[:state],
 						:zip => restaurant_data[:zip_code], :county => "Multnomah")
 						puts "Saved: #{restaurant_data[:name]}"

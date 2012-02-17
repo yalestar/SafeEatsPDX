@@ -11,5 +11,9 @@ namespace :multnomah do
 		require 'multnomah_parser'
 		MultnomahParser.geocode_multnomah
 	end
+	task :geokit => :environment do
+		require 'multnomah_parser'
+		MultnomahParser.geokit_geocode
+	end
 
 end
