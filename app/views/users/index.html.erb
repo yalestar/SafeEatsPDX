@@ -1,11 +1,50 @@
 
 <%= stylesheet_link_tag :all %>
 <%= javascript_include_tag :all %>
-
-<div id="map" style="height: 200px"></div> 
+<div id="place"></div>
+    <button id="btnInit">Get Location</button>
+<div id="map" style="height: 800px"></div>
 
 <script type="text/javascript">
-	 $(document).ready(function() {
-        var map = new L.Map('map');
+         var positionopts = {
+             enableHighAccuracy: true,
+             timeout: 10000
+         };
+    var map = new L.Map('map');
+    var cloudmadeUrl = "http://{s}.tile.cloudmade.com/8df754a7229f41209a6dc89d4615f0f1/997/256/{z}/{x}/{y}.png",
+    cloudmadeAttrib = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
+    cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttrib});
+     $(document).ready(function() {
+        $("#btnInit").click(function() {
+            navigator.geolocation.getCurrentPosition(handler, problemHandler, positionopts);
+        });
     });
+
+
+
+    function handler(position) {
+        txt = "Lat: " + position.coords.latitude + ' Lon: ' +position.coords.longitude;
+        $("#place").text(txt);
+        var pdx = new L.LatLng(position.coords.latitude, position.coords.longitude);
+        map.setView(pdx, 13).addLayer(cloudmade);
+        var marker = new L.Marker(pdx);
+        map.addLayer(marker);
+    }
+    
+    function problemHandler(prob) { 
+        console.log(prob.code);
+        // switch(prob.code) {
+        //  case 1:
+        //  $("place").innerHTML = "User declined to share the location information.";
+        //  break; 
+        //  case 2: $("place").innerHTML = "Errors in getting base location."; 
+        //  break; 
+        //  case 3: $("place").innerHTML = "Timeout in getting base location."; 
+     }
+ 
 </script>
+
+<div>
+
+</div>
+
