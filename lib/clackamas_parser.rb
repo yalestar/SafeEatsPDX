@@ -10,9 +10,22 @@ class ClackamasParser
       str.split(/(\W)/).map(&:capitalize).join
     end
 
+    def geocode_multnomah
+
+      Restaurant.where(:county => "Clackamas", :loc => {'$size' => 0 }).each do |r|
+
+        coords = geocode_restaurant(r)
+        next if coords.nil?
+        lat = coords.first.to_f
+        long = coords.last.to_f
+        r.loc = [long, lat]
+        puts "#{r.name} -> #{r.address} -> #{r.loc}"
+        r.save
+      end
+    end
+
     def run_parser
       url = "http://www.clackamas.us/healthapp/ri.jsp"
-      gc = Graticule.service(:google).new(GOOGLE_API_KEY)
 
       agent = Mechanize.new
       page = agent.get(url)

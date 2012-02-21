@@ -18,7 +18,10 @@ class MultnomahParser
 				total += 1
 				res = MultiGeocoder.geocode(r.address)
 				if res
-					r.loc = res.ll.split
+					lat_long = res.ll.split(",")
+					lat = lat_long.first.to_f
+					long = lat_long.last.to_f
+					loc = [long, lat]
 					puts "#{r.name} -> #{r.address} -> #{r.loc}"
 					r.save
 					pass += 1
@@ -33,7 +36,12 @@ class MultnomahParser
 		def geocode_multnomah
 
 			Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 }).each do |r|
-				r.loc = geocode_restaurant(r)
+
+				coords = geocode_restaurant(r)
+				next if coords.nil?
+				lat = coords.first.to_f
+				long = coords.last.to_f
+				r.loc = [long, lat]
 				puts "#{r.name} -> #{r.address} -> #{r.loc}"
 				r.save
 			end

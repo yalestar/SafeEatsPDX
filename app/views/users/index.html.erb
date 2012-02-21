@@ -3,29 +3,56 @@
 <%= javascript_include_tag :all %>
 <div id="place"></div>
     <button id="btnInit">Get Location</button>
-<div id="map" style="height: 800px"></div>
+    <button id="find20">Find 20</button>
+<div id="map" style="height: 400px; width:400px"></div>
 
 <script type="text/javascript">
-         var positionopts = {
-             enableHighAccuracy: true,
-             timeout: 10000
-         };
+    var positionopts = {
+       enableHighAccuracy: true,
+       timeout: 10000
+    };
     var map = new L.Map('map');
+    var ourPositionLat;
+    var ourPositionLong;
     var cloudmadeUrl = "http://{s}.tile.cloudmade.com/8df754a7229f41209a6dc89d4615f0f1/997/256/{z}/{x}/{y}.png",
     cloudmadeAttrib = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
     cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttrib});
-     $(document).ready(function() {
-        $("#btnInit").click(function() {
+    $(document).ready(function() {
+        // $("#btnInit").click(function() {
             navigator.geolocation.getCurrentPosition(handler, problemHandler, positionopts);
-        });
+        // });
+
+        $("#find20").click(function() {
+           find(); 
+            $.ajax({
+               type: "GET",
+               url: "/find_nearest",
+               data: "lat=" + ourPositionLat + "&long=" +ourPositionLong,
+               success: function(data){
+                json = $.parseJSON(data);
+                    $.each(json, function(i,v) {
+                        // console.log(v.obj.loc);
+                        ll = v.obj.loc.reverse()
+                        var marker = new L.Marker(new L.LatLng(ll[0], ll[1]));
+                        map.addLayer(marker);                        
+                    });
+                }
+           });
+           });
     });
 
-
-
+    function find() {
+        // console.log(ourPositionLat);
+        // console.log(ourPositionLong);
+    }
     function handler(position) {
+        //ourPositionLat = position.coords.latitude;
+        //ourPositionLong = position.coords.longitude;
+        ourPositionLat = 45.52;
+        ourPositionLong = -122.681944;
         txt = "Lat: " + position.coords.latitude + ' Lon: ' +position.coords.longitude;
         $("#place").text(txt);
-        var pdx = new L.LatLng(position.coords.latitude, position.coords.longitude);
+        var pdx = new L.LatLng(ourPositionLat, ourPositionLong);
         map.setView(pdx, 13).addLayer(cloudmade);
         var marker = new L.Marker(pdx);
         map.addLayer(marker);

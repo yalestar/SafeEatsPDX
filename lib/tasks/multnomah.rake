@@ -16,4 +16,11 @@ namespace :multnomah do
 		MultnomahParser.geokit_geocode
 	end
 
+	desc "Fix locations"
+	task :fix_geo => :environment do
+		Restaurant.where(:county => "Multnomah").each do |r|
+			r.loc = r.loc.reverse
+			r.save
+		end
+	end
 end

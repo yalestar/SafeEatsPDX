@@ -3,6 +3,7 @@ SafeEatsPDX::Application.routes.draw do
 
   get "user/show"
 
+  get "/find_nearest" => "users#find_nearest"
   # The priority is based upon order of creation:
   # first created -> highest priority.
   # Sample of regular route:
