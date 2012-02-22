@@ -48,19 +48,10 @@ GEM
       i18n (~> 0.4)
     geokit (1.6.5)
       multi_json
-    graticule (2.2.0)
-      activesupport
-      happymapper (>= 0.3.0)
-      i18n
-      json
-    happymapper (0.4.0)
-      libxml-ruby (~> 2.0)
     i18n (0.4.2)
     jquery-rails (1.0.19)
       railties (~> 3.0)
       thor (~> 0.14)
-    json (1.6.5)
-    libxml-ruby (2.2.2)
     linecache19 (0.5.12)
       ruby_core_source (>= 0.1.4)
     mail (2.2.19)
@@ -135,7 +126,6 @@ PLATFORMS
 DEPENDENCIES
   faker
   geokit
-  graticule
   jquery-rails
   mechanize
   mongo_mapper

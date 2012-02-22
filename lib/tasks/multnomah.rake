@@ -3,7 +3,13 @@ namespace :multnomah do
 	desc "Multnomah County parser"
 	task :parser => :environment do
 		require 'multnomah_parser'
-		MultnomahParser.run_parser
+		MultnomahParser.fetch_restaurants
+	end
+
+	desc "Fetch Multnomah inspections"
+	task :get_inspections => :environment do
+		require "multnomah_parser"
+		MultnomahParser.fetch_inspections
 	end
 
 	desc "Multnomah geocoder"

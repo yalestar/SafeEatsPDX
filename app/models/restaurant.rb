@@ -9,6 +9,7 @@ class Restaurant
      key :county, String
      key :state, String
      key :zip, String
+     key :site_id, String
      key :loc, Array
 
      def address
