@@ -27,7 +27,8 @@ class ClackamasParser
     def yahoo_geocode
       yk = "zJTs83vV34Eev5u7qgZIhICrZ0f20bNkRyvl9_XZmMMygNWXkDscK.z030x6UB4-"
 
-      ungeocoded = Restaurant.where(:county => "Clackamas", :loc => {'$size' => 0 })
+      # ungeocoded = Restaurant.where(:county => "Clackamas", :loc => {'$size' => 0 })
+      ungeocoded = Restaurant.where(:county => "Clackamas")
       total = ungeocoded.count
       ungeocoded.each_with_index do |restaurant, idx|
         next if restaurant.street.nil?  

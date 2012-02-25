@@ -8,7 +8,7 @@ class UsersController < ApplicationController
   def find_nearest
   	lat = params[:lat].to_f
   	long = params[:long].to_f
-  	# rs = Restaurant.find({"loc" => {"$near" => [long, lat]}}, {:limit => 20})
+  	# rs = Restaurant.find({"loc" => {"$near" => [long, lat]}}, {:limit => 10})
   	
   	# TODO: this is really more of a metadata command
   	rs = MongoMapper.database.command({ 'geoNear' => 'restaurants', 'near' => [long,lat]})

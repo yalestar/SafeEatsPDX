@@ -46,10 +46,10 @@
         // console.log(ourPositionLong);
     }
     function handler(position) {
-        //ourPositionLat = position.coords.latitude;
-        //ourPositionLong = position.coords.longitude;
-        ourPositionLat = 45.52;
-        ourPositionLong = -122.681944;
+        ourPositionLat = position.coords.latitude;
+        ourPositionLong = position.coords.longitude;
+        // ourPositionLat = 45.52;
+        // ourPositionLong = -122.681944;
         txt = "Lat: " + position.coords.latitude + ' Lon: ' +position.coords.longitude;
         $("#place").text(txt);
         var pdx = new L.LatLng(ourPositionLat, ourPositionLong);

@@ -1,0 +1,1 @@
+{loc: {$within: {$center: [[lng, lat], 0.0011]}
