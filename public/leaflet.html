@@ -25,11 +25,12 @@
     	var cloudmadeUrl = "http://{s}.tile.cloudmade.com/8df754a7229f41209a6dc89d4615f0f1/997/256/{z}/{x}/{y}.png",
     	cloudmadeAttrib = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
     	cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttrib});
-    	var pdx = new L.LatLng(45.5225,-122.691403);
-    	map.setView(pdx, 13).addLayer(cloudmade);
-    	var marker = new L.Marker(new L.LatLng(45.5225,-122.691403));
-    	map.addLayer(marker);
-    	marker.bindPopup("<b>asdf</b><br/> I am poopup");
+    	// var pdx = new L.LatLng(45.5225,-122.691403);
+        map.locateAndSetView(22);
+    	map.addLayer(cloudmade);
+    	// var marker = new L.Marker(new L.LatLng(45.5225,-122.691403));
+    	// map.addLayer(marker);
+    	// marker.bindPopup("<b>asdf</b><br/> I am poopup");
     });
 
 </script>

@@ -19,32 +19,70 @@
     cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttrib});
     $(document).ready(function() {
         // $("#btnInit").click(function() {
-            navigator.geolocation.getCurrentPosition(handler, problemHandler, positionopts);
+            // navigator.geolocation.getCurrentPosition(handler, problemHandler, positionopts);
         // });
+        map.on('locationerror', function(e) {
+            alert(e.message);
+        });
+        map.on('locationfound', function(e) {
+            // alert(e.latlng.lat)
+            ourPositionLong = e.latlng.lng;
+            ourPositionLat = e.latlng.lat
+            // console.log("lat: " + ourPositionLat);
+            // console.log("long: " + ourPositionLong);
+            var marker = new L.Marker(new L.LatLng(ourPositionLat, ourPositionLong));
+            map.addLayer(marker);  
+        });
 
+        map.on("dragend", function(e) {           
+            var newLocation = map.getCenter();
+            ourPositionLong = newLocation.lng;
+            ourPositionLat = newLocation.lat
+            console.log("lat: " + ourPositionLat);
+            console.log("long: " + ourPositionLong);
+            // map.clearLayers();
+            getItems();
+        });
+
+        map.locateAndSetView(14);
+        map.addLayer(cloudmade);
         $("#find20").click(function() {
-           find(); 
-            $.ajax({
-               type: "GET",
-               url: "/find_nearest",
-               data: "lat=" + ourPositionLat + "&long=" +ourPositionLong,
-               success: function(data){
-                json = $.parseJSON(data);
-                    $.each(json, function(i,v) {
-                        // console.log(v.obj.loc);
-                        ll = v.obj.loc.reverse()
-                        var marker = new L.Marker(new L.LatLng(ll[0], ll[1]));
-                        map.addLayer(marker);                        
-                    });
-                }
-           });
-           });
+          getItems();
+        });
     });
 
-    function find() {
-        // console.log(ourPositionLat);
-        // console.log(ourPositionLong);
+
+    function getItems(e) {
+        if (typeof group !== 'undefined') {
+            group.clearLayers();
+        }
+        group = new L.LayerGroup();
+        $.ajax({
+         type: "GET",
+         url: "/find_nearest",
+         data: "lat=" + ourPositionLat + "&long=" +ourPositionLong,
+         success: function(data){
+            json = $.parseJSON(data);
+            var items = $.each(json, function(i,v) {
+                var ll = v.obj.loc.reverse()
+                var name = v.obj.name;
+                var street = v.obj.street;
+                var latest = "";
+                console.log(v.obj.inspections.length);
+                if(v.obj.inspections.length > 0) {
+                    latest = v.obj.inspections[0].score
+                }
+                pc = name + "<br/>" + street + "<br/>Most Recent Inspection:";
+                pc += latest;
+                var marker = new L.Marker(new L.LatLng(ll[0], ll[1]));
+                marker.bindPopup(pc);
+                group.addLayer(marker);
+            });
+            map.addLayer(group);                        
+        }
+           });
     }
+
     function handler(position) {
         ourPositionLat = position.coords.latitude;
         ourPositionLong = position.coords.longitude;
@@ -53,6 +91,8 @@
         txt = "Lat: " + position.coords.latitude + ' Lon: ' +position.coords.longitude;
         $("#place").text(txt);
         var pdx = new L.LatLng(ourPositionLat, ourPositionLong);
+        map.locateAndSetView(13);
+        map.addLayer(cloudmade);
         map.setView(pdx, 13).addLayer(cloudmade);
         var marker = new L.Marker(pdx);
         map.addLayer(marker);
