@@ -11,7 +11,7 @@ class UsersController < ApplicationController
   	# rs = Restaurant.find({"loc" => {"$near" => [long, lat]}}, {:limit => 10})
   	
   	# TODO: this is really more of a metadata command
-  	rs = MongoMapper.database.command({ 'geoNear' => 'restaurants', 'near' => [long,lat]})
+  	rs = MongoMapper.database.command({ 'geoNear' => 'restaurants', 'near' => [long,lat]}, :num => 5)
 
   	# debugger
   	respond_to do |format|

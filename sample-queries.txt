@@ -1,1 +1,9 @@
 {loc: {$within: {$center: [[lng, lat], 0.0011]}
+
+db.restaurants.find({"county" : "Multnomah", "inspections" : {'$size' : {$gt : 0}}}).count()
+db.restaurants.find({"inspections" : {$size : 0}} ).count()
+
+db.restaurants.remove({"county" : "Multnomah"})
+
+mongo mapper:
+Restaurant.where(:county => "Multnomah", :inspections => {'$size' => 0 }).size

@@ -1,11 +1,47 @@
 
 <%= stylesheet_link_tag :all %>
 <%= javascript_include_tag :all %>
-<div id="place"></div>
-    <button id="btnInit">Get Location</button>
-    <button id="find20">Find 20</button>
-<div id="map" style="height: 400px; width:400px"></div>
+<style type="text/css">
+    .result_item { font-size: 80%;}
+    .green { background-color: #68ff78;}
+    .yellow { background-color: #fffa79;}
+    .red { background-color: #ff5847;}
+</style>
+<div data-role="page" data-theme="b">
+    <div data-role="header">
+        <h2>SafeEatsPDX</h2>
+    </div>
 
+    <div data-role="collapsible-set">
+
+        <div data-role="collapsible" data-collapsed="false" data-mini="true">
+            <h3>Map View</h3>
+
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+            <a href="#" id="getLocation" data-role="button" data-inline="true" data-mini="true">Get Loc</a>
+            <a href="#" id="find" data-role="button" data-inline="true" data-theme="b" data-mini="true">Find</a>
+            <a href="#" id="clear" data-role="button" data-inline="true" data-theme="b" data-mini="true">Clear</a>
+            <div id="map" style="height: 400px; width:500px"></div>
+                </div>
+                <div class="ui-block-b">
+                    <h2>Results</h2>
+                    <div id="results_block" class="result_item">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="collapsible" data-mini="true">
+            <h3>Search</h3>
+            <label for="search-basic">Search Input:</label>
+            <input type="search" name="search" id="searc-basic" value="" data-mini="true"/>
+        </div>
+
+    </div>
+
+</div>
 <script type="text/javascript">
     var positionopts = {
        enableHighAccuracy: true,
@@ -16,16 +52,27 @@
     var ourPositionLong;
     var cloudmadeUrl = "http://{s}.tile.cloudmade.com/8df754a7229f41209a6dc89d4615f0f1/997/256/{z}/{x}/{y}.png",
     cloudmadeAttrib = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
-    cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttrib});
+    cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 22, attribution: cloudmadeAttrib});
     $(document).ready(function() {
-        // $("#btnInit").click(function() {
-            // navigator.geolocation.getCurrentPosition(handler, problemHandler, positionopts);
-        // });
+        $("#getLocation").click(function() {
+            if (typeof group !== 'undefined') {
+                group.clearLayers();
+            }
+            map.locateAndSetView(12);
+        });
+
+
+        $("#clear").click(function() {
+            if (typeof group !== 'undefined') {
+                $("#results_block").text("");
+                group.clearLayers();
+            }
+            // map.locateAndSetView(12);
+        });
         map.on('locationerror', function(e) {
             alert(e.message);
         });
         map.on('locationfound', function(e) {
-            // alert(e.latlng.lat)
             ourPositionLong = e.latlng.lng;
             ourPositionLat = e.latlng.lat
             // console.log("lat: " + ourPositionLat);
@@ -38,15 +85,15 @@
             var newLocation = map.getCenter();
             ourPositionLong = newLocation.lng;
             ourPositionLat = newLocation.lat
-            console.log("lat: " + ourPositionLat);
-            console.log("long: " + ourPositionLong);
+            // console.log("lat: " + ourPositionLat);
+            // console.log("long: " + ourPositionLong);
             // map.clearLayers();
             getItems();
         });
 
-        map.locateAndSetView(14);
+        map.locateAndSetView(12);
         map.addLayer(cloudmade);
-        $("#find20").click(function() {
+        $("#find").click(function() {
           getItems();
         });
     });
@@ -56,6 +103,7 @@
         if (typeof group !== 'undefined') {
             group.clearLayers();
         }
+
         group = new L.LayerGroup();
         $.ajax({
          type: "GET",
@@ -63,7 +111,10 @@
          data: "lat=" + ourPositionLat + "&long=" +ourPositionLong,
          success: function(data){
             json = $.parseJSON(data);
+            var results_txt = "";
             var items = $.each(json, function(i,v) {
+            var results_txt = "";
+
                 var ll = v.obj.loc.reverse()
                 var name = v.obj.name;
                 var street = v.obj.street;
@@ -72,46 +123,33 @@
                 if(v.obj.inspections.length > 0) {
                     latest = v.obj.inspections[0].score
                 }
-                pc = name + "<br/>" + street + "<br/>Most Recent Inspection:";
-                pc += latest;
+                pc = name + "<br/>" + street + "<br/>Most Recent Inspection: ";
+                pc += "<b>" + latest + "</b>";
                 var marker = new L.Marker(new L.LatLng(ll[0], ll[1]));
                 marker.bindPopup(pc);
                 group.addLayer(marker);
+                if (latest >= 90) {
+                    var cls ="green";
+                } else if (latest < 90 && latest >= 80) {
+                    var cls ="yellow";
+                } else {
+                    var cls="red";
+                }
+                results_txt += v.obj.name + "<br/>";
+                results_txt += v.obj.street + "<br/>";
+                results_txt += v.obj.city + "<br/>";
+                results_txt += "<span class=" + cls + ">";
+                results_txt += "<b>Most Recent Score: " + latest + "</b><br/></span>";
+                results_txt += "<hr/>";
+                $("#results_block").append(results_txt);
+                // TODO: put this in the mongo query
+                return (i != 15);
             });
             map.addLayer(group);                        
         }
            });
     }
-
-    function handler(position) {
-        ourPositionLat = position.coords.latitude;
-        ourPositionLong = position.coords.longitude;
-        // ourPositionLat = 45.52;
-        // ourPositionLong = -122.681944;
-        txt = "Lat: " + position.coords.latitude + ' Lon: ' +position.coords.longitude;
-        $("#place").text(txt);
-        var pdx = new L.LatLng(ourPositionLat, ourPositionLong);
-        map.locateAndSetView(13);
-        map.addLayer(cloudmade);
-        map.setView(pdx, 13).addLayer(cloudmade);
-        var marker = new L.Marker(pdx);
-        map.addLayer(marker);
-    }
-    
-    function problemHandler(prob) { 
-        console.log(prob.code);
-        // switch(prob.code) {
-        //  case 1:
-        //  $("place").innerHTML = "User declined to share the location information.";
-        //  break; 
-        //  case 2: $("place").innerHTML = "Errors in getting base location."; 
-        //  break; 
-        //  case 3: $("place").innerHTML = "Timeout in getting base location."; 
-     }
  
 </script>
 
-<div>
-
-</div>
 

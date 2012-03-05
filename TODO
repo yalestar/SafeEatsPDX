@@ -12,3 +12,7 @@ maybe some clever symbology would be in order?
 do geocoding batch-style
 Also maybe send out Twitter notices of new inspections?
 GeoRSS?
+
+docs for sparkline lib: http://omnipotent.net/jquery.sparkline/
+
+Jquery mobile for the non-map functionality (name search, e.g.)

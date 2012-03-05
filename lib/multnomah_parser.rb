@@ -144,8 +144,10 @@ class MultnomahParser
 						index_page = click_button(index_page, 'Next')
 					rescue Timeout::Error => e
 						puts "[-!-] Timeout fetching page; retrying..."
+                  puts e
 					rescue Net::HTTPInternalServerError => e
 						puts "[-!-] 500 Internal Server Error fetching page; retrying..."
+                  puts e
 					else
 						successful = true
 					end
@@ -199,7 +201,10 @@ class MultnomahParser
 
 		
 		def fetch_inspections 
-			Restaurant.all.each do |r|
+			# change this for getting updated inspections
+			#  currently just for getting missed ones
+			no_inspections = Restaurant.where(:county => "Multnomah", :inspections => {'$size' => 0 })
+			no_inspections.each do |r|
 				fetch_inspections_for(r)
 			end	
 		end
