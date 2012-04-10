@@ -1,11 +1,17 @@
+require 'uri'
+require 'mongo'
+
 if Rails.env == "development"
 	MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
 	MongoMapper.database = "safe_eats_pdx"
 
 elsif Rails.env == "production"
-	MongoMapper.connection = Mongo::Connection.new('flame.mongohq.com', 27052)
-	db = MongoMapper.database = "app3879091"
-	auth = db.authenticate("yalestar", "eldongo1")
+	uri = URI.parse(ENV['MONGOHQ_URL'])
+	conn = Mongo::Connection.from_uri(ENV['MONGOHQ_URL'])
+	db = conn.db(uri.path.gsub(/^\//, ''))
+	# MongoMapper.connection = Mongo::Connection.new('flame.mongohq.com', 27052)
+	# db = MongoMapper.database = "app3879091"
+	# auth = db.authenticate("yalestar", "eldongo1")
 
 end
 		
