@@ -6,11 +6,16 @@ if Rails.env == "development"
 	MongoMapper.database = "safe_eats_pdx"
 
 elsif Rails.env == "production"
-	uri = URI.parse(ENV['MONGOHQ_URL'])
-	conn = Mongo::Connection.from_uri(ENV['MONGOHQ_URL'])
-	db = conn.db(uri.path.gsub(/^\//, ''))
-	MongoMapper.database = db
+	# uri = URI.parse(ENV['MONGOHQ_URL'])
+	# conn = Mongo::Connection.from_uri(ENV['MONGOHQ_URL'])
+	# db = conn.db(uri.path.gsub(/^\//, ''))
+	# MongoMapper.database = db
 	# MongoMapper.connection = Mongo::Connection.new('flame.mongohq.com', 27052)
+	MongoMapper.config = { 
+  	Rails.env => { 'uri' => ENV['MONGOHQ_URL'] || 
+                          'mongodb://flame.mongohq.com:27052/restaurants' } }
+
+	MongoMapper.connect(Rails.env)
 
 end
 		
