@@ -4,7 +4,7 @@ if Rails.env == "development"
 
 elsif Rails.env == "production"
 	MongoMapper.connection = Mongo::Connection.new('flame.mongohq.com', 27052)
-	db = MongoMapper.database = "safe_eats_pdx"
+	db = MongoMapper.database = "app3879091"
 	auth = db.authenticate("yalestar", "eldongo1")
 
 end
