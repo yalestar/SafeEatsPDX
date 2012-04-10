@@ -9,15 +9,11 @@ elsif Rails.env == "production"
 	uri = URI.parse(ENV['MONGOHQ_URL'])
 	conn = Mongo::Connection.from_uri(ENV['MONGOHQ_URL'])
 	db = conn.db(uri.path.gsub(/^\//, ''))
+	MongoMapper.database = db
 	# MongoMapper.connection = Mongo::Connection.new('flame.mongohq.com', 27052)
-	# db = MongoMapper.database = "app3879091"
-	# auth = db.authenticate("yalestar", "eldongo1")
 
 end
 		
-# mongodb://<user>:<password>@flame.mongohq.com:27052/app3879091
-# MongoMapper.database = "pdx"
-
 if defined?(PhusionPassenger)
    PhusionPassenger.on_event(:starting_worker_process) do |forked|
      MongoMapper.connection.connect if forked
