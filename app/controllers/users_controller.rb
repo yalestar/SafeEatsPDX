@@ -20,4 +20,9 @@ class UsersController < ApplicationController
   	
   end
 
+  def name_search
+    rname = params[:name]
+    # rs = Restaurant
+  end
+
 end
