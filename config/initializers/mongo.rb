@@ -11,9 +11,10 @@ elsif Rails.env == "production"
 	# db = conn.db(uri.path.gsub(/^\//, ''))
 	# MongoMapper.database = db
 	# MongoMapper.connection = Mongo::Connection.new('flame.mongohq.com', 27052)
+	# mongo ds031857.mongolab.com:31857/heroku_app3879091
 	MongoMapper.config = { 
-  	Rails.env => { 'uri' => ENV['MONGOHQ_URL'] || 
-                          'mongodb://flame.mongohq.com:27052/restaurants' } }
+  	Rails.env => { 'uri' => ENV['MONGOLAB_URI'] || 
+                          'mongodb://ds031857.mongolab.com:31857/heroku_app3879091' } }
 
 	MongoMapper.connect(Rails.env)
 

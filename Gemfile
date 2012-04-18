@@ -1,7 +1,8 @@
 source 'http://gemcutter.org'
 
-gem "rails", "3.0.0"
-gem "mongo_mapper"
+gem 'rails', '3.2.2'
+gem 'mongo_mapper'
+gem 'bson_ext'
 gem 'geokit'
 # gem 'graticule'
 gem 'nokogiri'

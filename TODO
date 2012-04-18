@@ -1,3 +1,9 @@
+Notes:
+=================================================================
+4/18/2012: switched from MongoHQ to MongoLab (not enough storage on HQ free plan, although I may switch to their 5/mo. plan)			
+Use: heroku config | grep MONGOLAB_URI
+to get connection info (see: https://devcenter.heroku.com/articles/mongolab#database_connection_information)
+
 Implement this fucker:
   http://www.civicapps.org/ideas/safeeats-portland-restaurant-health-inspection-reports
   Restaurant Health Inspection Reports with maps
