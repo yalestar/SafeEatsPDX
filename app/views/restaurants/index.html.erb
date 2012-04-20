@@ -121,13 +121,13 @@
             var items = $.each(json, function(i,v) {
             var results_txt = "";
 
-                var ll = v.obj.loc.reverse()
-                var name = v.obj.name;
-                var street = v.obj.street;
+                var ll = v.loc.reverse()
+                var name = v.name;
+                var street = v.street;
                 var latest = "";
-                console.log(v.obj.inspections.length);
-                if(v.obj.inspections.length > 0) {
-                    latest = v.obj.inspections[0].score
+                console.log(v.inspections.length);
+                if(v.inspections.length > 0) {
+                    latest = v.inspections[0].score
                 }
                 pc = name + "<br/>" + street + "<br/>Most Recent Inspection: ";
                 pc += "<b><a href='#'>" + latest + "</a></b>";
@@ -143,9 +143,9 @@
                 } else {
                     var cls="red";
                 }
-                results_txt += v.obj.name + "<br/>";
-                results_txt += v.obj.street + "&nbsp;<a href='#' class='zoomTo'>z</a><br/>";
-                results_txt += v.obj.city + "<br/>";
+                results_txt += v.name + "<br/>";
+                results_txt += v.street + "&nbsp;<a href='#' class='zoomTo'>z</a><br/>";
+                results_txt += v.city + "<br/>";
                 results_txt += "<span class=" + cls + ">";
                 results_txt += "<b>Most Recent Score: " + latest + "</b><br/></span>";
                 results_txt += "<hr/>";

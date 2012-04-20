@@ -1,4 +1,5 @@
 class RestaurantsController < ApplicationController
+
   def index
   end
 
@@ -11,11 +12,12 @@ class RestaurantsController < ApplicationController
   	# rs = Restaurant.find({"loc" => {"$near" => [long, lat]}}, {:limit => 10})
   	
   	# TODO: this is really more of a metadata command
-  	rs = MongoMapper.database.command({ 'geoNear' => 'restaurants', 'near' => [long,lat]}, :num => 5)
-
-  	# debugger
+  	# rs = MongoMapper.database.command({ 'geoNear' => 'restaurants', 'near' => [long,lat]}, :num => 5)
+    center = [long, lat]
+    radius = 0.01
+    rs = Restaurant.where(:loc => {'$near' => center, '$maxDistance' => radius}).limit(10).all
   	respond_to do |format|
-  		format.js { render :json => rs['results'] }
+  		format.js { render :json => rs }
   	end
   	
   end
