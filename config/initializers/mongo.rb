@@ -1,10 +1,10 @@
 require 'uri'
 require 'mongo'
 
-MongoMapper.config = {
-  Rails.env => { 'uri' => ENV['MONGOLAB_URI'] }
-}
-MongoMapper.connect(Rails.env)
+# MongoMapper.config = {
+#   Rails.env => { 'uri' => ENV['MONGOLAB_URI'] }
+# }
+# MongoMapper.connect(Rails.env)
 
 
 

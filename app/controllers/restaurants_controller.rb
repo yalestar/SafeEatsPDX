@@ -1,5 +1,9 @@
 class RestaurantsController < ApplicationController
 
+  def testpage
+    
+  end
+  
   def index
   end
 

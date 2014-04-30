@@ -1,0 +1,183 @@
+	<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>A Simple Map</title>
+
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+<script src='https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.css' rel='stylesheet' />
+	
+	<style type="text/css">
+	  .ui-bar { font-family: Tahoma, sans-serif; font-size: smaller; color: white;}
+	  .result_item { font-size: 80%;}
+	  .green { background-color: #68ff78;}
+	  .yellow { background-color: #fffa79;}
+	  .red { background-color: #ff5847;}
+	  .orange { background-color: #FFA42E;}
+	
+		body { margin:0; padding:0; }
+	  #map { position:absolute; top:0; bottom:0; width:100%; }
+	</style>
+	</head>
+<body>
+<div id='map'></div>
+<script>
+	var key = 'yalestar.i3904h2l';
+	var map = L.mapbox.map('map', key).setView([45, -122.50], 9);
+	var positionopts = {
+       enableHighAccuracy: true,
+       timeout: 10000
+    };
+
+	var positionopts = {
+	   enableHighAccuracy: true,
+	   timeout: 10000
+	};
+
+	var ourPositionLat;
+	var ourPositionLong;
+	var layer = L.mapbox.tileLayer(key);
+
+	$(document).ready(function() {
+	    $("#getLocation").click(function() {
+	        if (typeof group !== 'undefined') {
+	            group.clearLayers();
+	        }
+	        map.locate(12);
+	    });
+
+
+	    $("#clear").click(function() {
+	      if (typeof group !== 'undefined') {
+	          $("#results_block").text("");
+	          group.clearLayers();
+	      }
+	        // map.locate(12);
+	    });
+	    map.on('locationerror', function(e) {
+	        alert(e.message);
+	    });
+	    map.on('locationfound', function(e) {
+	        ourPositionLong = e.latlng.lng;
+	        ourPositionLat = e.latlng.lat
+	        // console.log("lat: " + ourPositionLat);
+	        // console.log("long: " + ourPositionLong);
+	        var marker = new L.Marker(new L.LatLng(ourPositionLat, ourPositionLong));
+	        map.addLayer(marker);  
+	    });
+
+	    map.on("dragend", function(e) {           
+	        var newLocation = map.getCenter();
+	        ourPositionLong = newLocation.lng;
+	        ourPositionLat = newLocation.lat
+	        // console.log("lat: " + ourPositionLat);
+	        // console.log("long: " + ourPositionLong);
+	        // map.clearLayers();
+	        getItems();
+	    });
+
+	    map.locate(12);
+	    // map.addLayer(cloudmade);
+	    $("#find").click(function() {
+	      getItems();
+	    });
+	});
+
+
+	function getItems(e) {
+	  if (typeof group !== 'undefined') {
+	      group.clearLayers();
+	  }
+
+	  group = new L.LayerGroup();
+	  $.ajax({
+	    type: "GET",
+	    url: "/find_nearest",
+	    data: "lat=" + ourPositionLat + "&long=" +ourPositionLong,
+	    success: function(data){
+	      json = $.parseJSON(data);
+	      var results_txt = "";
+	      var items = $.each(json, function(i,v) {
+	        var results_txt = "";
+
+	          var ll = v.loc.reverse()
+	          var name = v.name;
+	          var street = v.street;
+	          var latest = "";
+	          // console.log(v.inspections.length);
+	          if(v.inspections.length > 0) {
+	              latest = v.inspections[0].score
+	          }
+	          pc = name + "<br/>" + street + "<br/>Most Recent Inspection: ";
+	          pc += "<b><a href='#'>" + latest + "</a></b>";
+	          var marker = new L.Marker(new L.LatLng(ll[0], ll[1]));
+	          marker.bindPopup(pc);
+	          group.addLayer(marker);
+	          if (latest >= 90) {
+	              var cls ="green";
+	          } else if (latest < 90 && latest >= 80) {
+	              var cls ="yellow";
+	          } else if (latest == undefined) {
+	              var cls = "orange"
+	          } else {
+	              var cls="red";
+	          }
+	          results_txt += v.name + "<br/>";
+	          results_txt += v.street + "&nbsp;<a href='#' class='zoomTo'>z</a><br/>";
+	          results_txt += v.city + "<br/>";
+	          results_txt += "<span class=" + cls + ">";
+	          results_txt += "<b>Most Recent Score: " + latest + "</b><br/></span>";
+	          results_txt += "<hr/>";
+	          $("#results_block").append(results_txt);
+	          // TODO: put this in the mongo query
+	          // return (i != 15);
+	        });
+	        map.addLayer(group);                        
+	    }
+	       });
+	}
+	
+</script>
+
+<div data-role="page" data-theme="b">
+    <div data-role="header">
+        <h5>SafeEatsPDX</h5>
+    </div>
+
+    <div data-role="collapsible-set">
+
+      <div data-role="collapsible" data-collapsed="false" data-mini="true">
+          <h5>Map View</h5>
+
+          <div class="ui-grid-a">
+              <div class="ui-block-a">
+          <a href="#" id="getLocation" data-role="button" data-inline="true" data-mini="true">Get Loc</a>
+          <a href="#" id="find" data-role="button" data-inline="true" data-theme="b" data-mini="true">Find</a>
+          <a href="#" id="clear" data-role="button" data-inline="true" data-theme="b" data-mini="true">Clear</a>
+          <div id="map" style="height: 400px; width:500px"></div>
+              </div>
+              <div class="ui-block-b">
+                <h2>Results</h2>
+                <h6>Order By: <a href="#" id="orderByScore">SCORE</a> | <a href="#" id="orderByName">NAME</a></h6>
+                <div id="results_block" class="result_item">
+                </div>
+              </div>
+          </div>
+      </div>
+
+        <div data-role="collapsible" data-mini="true">
+            <h3>Search</h3>
+            <label for="search-basic">Search Input:</label>
+            <input type="search" name="search" id="search-basic" value="" data-mini="true"/>
+        </div>
+
+    </div>
+
+</div>
+<div id="footer" data-role="footer" class="ui-bar">
+    <a href="/about">About</a> | <a href="/contact">Contact</a> | <a href="/data">Data</a> | <a href="/api">API</a>
+</div>
+</body>
+</html>
+

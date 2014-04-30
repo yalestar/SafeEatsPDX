@@ -191,7 +191,12 @@ class MultnomahParser
 			)
 
 			violations.each do |vio|
-				unless (vio.corrective_comments.empty? && vio.corrective_text.empty? && vio.inspection_id.nil? && vio.rule.empty? && vio.violation_comments.empty? &&  vio.violation_text.empty?)
+				unless (vio.corrective_comments.empty? \
+						&& vio.corrective_text.empty? \
+						&& vio.inspection_id.nil? \
+						&& vio.rule.empty? \
+						&& vio.violation_comments.empty? \
+						&&  vio.violation_text.empty?)
 					inspection.violations << vio
 				end					
 			end

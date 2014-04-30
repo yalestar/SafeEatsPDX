@@ -1,63 +1,60 @@
 require 'net/https'
 
-puts "Hello World"
-
-
-
-x = Net::HTTP.get(URI.parse("http://www.clark.wa.gov/public-health/food/list.asp"),nil)
-inspectionids = Array.new
+x = Net::HTTP.get(URI.parse("http://www.clark.wa.gov/public-health/food/list.asp"), nil)
+inspection_ids = Array.new
 #puts "body is: [#{x}]\n"
 x.split("'").each do |token|
-	if token.start_with?("FA")
-		inspectionids << token
-		puts("token is: #{token}")
-	end
+  if token.start_with?("FA")
+    inspection_ids << token
+    puts("token is: #{token}")
+  end
 end
 
 
-inspectionids.each do |inspect|
-params = Hash.new
-params[:selection] = inspect
+inspection_ids.each do |inspect|
+  params = Hash.new
+  params[:selection] = inspect
 
 
-x = Net::HTTP.post_form(URI.parse("http://www.clark.wa.gov/public-health/food/multilist.asp"),params)
+  site_url = 'http://www.clark.wa.gov/public-health/food/multilist.asp'
+  x = Net::HTTP.post_form(URI.parse(site_url), params)
 
 #puts "body is: [#{x.body}]\n"
-nexttdhasbusiness = false
-getbusiness = false
-getfirsttotal = true
-nexttdhasinspection = false
-getinspectiondate = false
-gotinspectiondate = false
-x.body.split(">").each do |token|
-	if token.include?("Business Name")
-		nexttdhasbusiness = true
-	end
-        if getbusiness
-		puts("business name is #{token}")
-		getbusiness = false
-		nexttdhasbusiness = false
-	end
-	if nexttdhasbusiness && token.include?("td width")
-		getbusiness = true
-	end
-	if token.include?("Total :") && getfirsttotal
-		getfirsttotal = false
-		puts("Total deduction is #{token}")
-	end
-	if getinspectiondate
-		puts("Inspection date is #{token}")
-		gotinspectiondate = true
-		nexttdhasinspection = false
-		getinspectiondate = false
-	end
- 	if nexttdhasinspection && token.include?("td")
-		getinspectiondate = true
-	end
-	if token.include?("Inspection/Site Visit") && !gotinspectiondate
-		nexttdhasinspection = true
-	end
-end
-   sleep 5
+  next_td_has_business = false
+  get_business = false
+  get_first_total = true
+  next_td_has_inspection = false
+  get_inspection_date = false
+  got_inspection_date = false
+  x.body.split(">").each do |token|
+    if token.include?("Business Name")
+      next_td_has_business = true
+    end
+    if get_business
+      puts("business name is #{token}")
+      get_business = false
+      next_td_has_business = false
+    end
+    if next_td_has_business && token.include?("td width")
+      get_business = true
+    end
+    if token.include?("Total :") && get_first_total
+      get_first_total = false
+      puts("Total deduction is #{token}")
+    end
+    if get_inspection_date
+      puts("Inspection date is #{token}")
+      got_inspection_date = true
+      next_td_has_inspection = false
+      get_inspection_date = false
+    end
+    if next_td_has_inspection && token.include?("td")
+      get_inspection_date = true
+    end
+    if token.include?("Inspection/Site Visit") && !got_inspection_date
+      next_td_has_inspection = true
+    end
+  end
+  sleep 5
 end
 
