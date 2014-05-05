@@ -19,6 +19,7 @@ class RestaurantsController < ApplicationController
   	# rs = MongoMapper.database.command({ 'geoNear' => 'restaurants', 'near' => [long,lat]}, :num => 5)
     center = [long, lat]
     radius = 0.01
+    debugger
     rs = Restaurant.where(:loc => {'$near' => center, '$maxDistance' => radius}).limit(10).all
   	respond_to do |format|
   		format.js { render :json => rs }

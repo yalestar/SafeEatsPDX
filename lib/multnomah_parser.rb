@@ -144,10 +144,10 @@ class MultnomahParser
 						index_page = click_button(index_page, 'Next')
 					rescue Timeout::Error => e
 						puts "[-!-] Timeout fetching page; retrying..."
-                  puts e
+            puts e
 					rescue Net::HTTPInternalServerError => e
 						puts "[-!-] 500 Internal Server Error fetching page; retrying..."
-                  puts e
+            puts e
 					else
 						successful = true
 					end
@@ -228,7 +228,7 @@ class MultnomahParser
 					inspection = parse_inspection_page(inspection_page)
 					restaurant.inspections << inspection
 					restaurant.save
-					# puts "Saved: #{restaurant.inspect}"
+					puts "Saved: #{restaurant.inspect}"
 
 					break unless inspection_page.forms.first.buttons.select{|b| b.name == 'NextInspection'}.first
 
