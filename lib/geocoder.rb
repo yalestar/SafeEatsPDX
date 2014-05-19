@@ -1,35 +1,67 @@
-require 'geokit'
-require 'json'
-require 'open-uri'
+class Geocoder
+	require 'geokit'
+	require 'json'
+	require 'open-uri'
+	
+	include Geokit::Geocoders
 
-include Geokit::Geocoders
+	# # geocode that sum'bitch
+	# begin
+	#   location = gc.locate(restaurant.address)
+	#   restaurant.loc = location.coordinates          
+	# rescue Exception => e
+	#   puts "something missed"
+	# end
 
-c = 0
-crappers = []
-Restaurant.all.first(50).each do |r|
-	c+=1
-	address = r.address
-	res = MultiGeocoder.geocode(address)
-	# puts res.ll # ll=latitude,longitude
-	# geocode_url = 'http://tasks.arcgisonline.com/ArcGIS/rest/services/Locators/TA_Streets_US_10/GeocodeServer/findAddressCandidates?Single+Line+Input='+URI.escape(address)+'&outFields=&outSR=&f=json'
-	# geocode_url = 'http://maps.googleapis.com/maps/api/geocode/json?address='+URI.escape(address)+'&sensor=false&output=json'
-	# result_json = open(geocode_url).read
-	# result = JSON.parse(result_json)
+	class << self
+		def google_geocode
 
-    # if result['candidates'] && !result['candidates'].empty? 
-    #   latitude = result['candidates'][0]['location']['y']
-    #   longitude = result['candidates'][0]['location']['x']
-    # elsif result['status'] && result['status'] != 'ZERO_RESULTS'
-    #   begin
-	   #    latitude = result['results'][0]['geometry']['location']['lat']
-	   #    longitude = result['results'][0]['geometry']['location']['lng']      	
-    #   rescue Exception => e
-    #   	crappers << c
-    #   	puts "crapped out on: #{c}: #{address}" 
-    #   end
-    # end
-    puts c
-   # puts "#{address} -> #{latitude} #{longitude}"
+		  Restaurant.where(:county => "Clackamas", :loc => {'$size' => 0 }).each do |r|
+
+		    coords = geocode_restaurant(r)
+		    next if coords.nil?
+		    lat = coords.first.to_f
+		    long = coords.last.to_f
+		    r.loc = [long, lat]
+		    puts "#{r.name} -> #{r.address} -> #{r.loc}"
+		    r.save
+		  end
+		end
+
+		# TODO: parameterize by county
+		def yahoo_geocode
+		  yk = "zJTs83vV34Eev5u7qgZIhICrZ0f20bNkRyvl9_XZmMMygNWXkDscK.z030x6UB4-"
+
+		  # ungeocoded = Restaurant.where(:county => "Clackamas", :loc => {'$size' => 0 })
+		  ungeocoded = Restaurant.where(:county => "Clackamas")
+		  total = ungeocoded.count
+		  ungeocoded.each_with_index do |restaurant, idx|
+		    next if restaurant.street.nil?  
+		    sleep 0.5
+		    geocode_url= "http://where.yahooapis.com/"
+		    geocode_url += "geocode?location=#{URI.escape(restaurant.address)}"
+		    geocode_url += "&flags=J&appid=#{yk}"
+
+		    begin
+		      result_json = open(geocode_url).read
+		      result = JSON.parse(result_json)
+		      r = result['ResultSet']['Results'].first
+
+		      lat = r['latitude'].to_f
+		      lng = r['longitude'].to_f
+		      coords = [lng, lat]
+		      next if coords.nil?
+		      restaurant.loc = [lng, lat]
+		      puts "#{restaurant.name} -> #{restaurant.address} -> #{restaurant.loc} (#{idx} of #{total})"
+		      restaurant.save
+		    rescue Exception => e
+		      puts "Error getting geocoder result: #{e.inspect}"
+		    end
+
+		  end
+
+		end
+
+	end
+
 end
-
-puts "crappers: #{crappers}"

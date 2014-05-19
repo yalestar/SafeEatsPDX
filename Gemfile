@@ -13,5 +13,5 @@ group :development do
 	# require 'rubygems'
 	gem 'faker'
 	gem 'pry'
-	gem 'pry-debugger'
+	# gem 'pry-debugger'
 end

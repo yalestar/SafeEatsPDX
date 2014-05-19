@@ -8,19 +8,21 @@ end
 
 def run_parser(url)
   agent = Mechanize.new
-  report = agent.get(url)
+  page = agent.get(url)
 
-  # the first tr's first td is 4 lines with the contact info separated by br
-  # the second td is a list of the inspections links
-  info_block = report.parser.search("//table[@border='0']/tr[1]/td[1]")
+  # submit the form with no criteria
+  report = page.forms.first.submit
+
+  # main info is in the first p tag
+  info_block = report.parser.search("//p[1]")
 
   name = info_block.first.children.first.text
   street = info_block.children[2].text
 
   if !info_block.children[4].text.empty?
-    csz = info_block.children[4].text
+    csz = info_block.children[4].text.strip
   else
-    csz = info_block.children[5].text
+    csz = info_block.children[5].text.strip
   end
   csz.gsub!("\r\n", "")
   # spaces in the returned string are actually nbsp
@@ -76,5 +78,6 @@ def run_parser(url)
 
 end
 
-url = "http://www.clackamas.us/healthapp/rim.jsp?q_ID=0310318B&q_iID=349213181"
+# url = "http://www.clackamas.us/healthapp/rim.jsp?q_ID=0310318B&q_iID=349213181"
+url = "http://web3.clackamas.us/healthapp/ri.jsp"
 run_parser(url)

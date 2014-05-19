@@ -27,3 +27,9 @@ GeoRSS for what?
 Sparklines for inspection history?
 type-ahead for search box
 API to return results by bounding box
+
+=================================================================
+05/11/2014
+fixing to move this over to NodeJS and PostGIS
+    in Node, iterate over existing Mongo coordinates and jack them into PG
+        geolib?

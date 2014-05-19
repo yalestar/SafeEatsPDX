@@ -3,7 +3,15 @@
 db.restaurants.find({"county" : "Multnomah", "inspections" : {'$size' : {$gt : 0}}}).count()
 db.restaurants.find({"inspections" : {$size : 0}} ).count()
 
+new way to get array lengths:
+db.restaurants.find({ $where: "this.loc.length > 0"}).count()
+
+http://stackoverflow.com/questions/6548061/how-to-fire-raw-mongodb-queries-directly-in-ruby
 db.restaurants.remove({"county" : "Multnomah"})
 
 mongo mapper:
+OLD WAY:
 Restaurant.where(:county => "Multnomah", :inspections => {'$size' => 0 }).size
+
+NEW WAY (05/14/2014)
+Restaurant.all(:loc => {:$size => 0 })

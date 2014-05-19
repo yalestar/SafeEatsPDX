@@ -14,7 +14,8 @@ class MultnomahParser
 		def geokit_geocode
 			pass = 0
 			total = 0
-			Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 }).each do |r|
+			# Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 }).each do |r|
+			Restaurant.all(:loc => {:$size => 0 }).each do |r|
 				total += 1
 				res = MultiGeocoder.geocode(r.address)
 				if res
@@ -35,7 +36,8 @@ class MultnomahParser
 		def yahoo_geocode
 			yk = "zJTs83vV34Eev5u7qgZIhICrZ0f20bNkRyvl9_XZmMMygNWXkDscK.z030x6UB4-"
 
-			ungeocoded = Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 })
+			# ungeocoded = Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 })
+			ungeocoded = Restaurant.all(:loc => {:$size => 0 })
 			total = ungeocoded.count
 			ungeocoded.each_with_index do |restaurant, idx|
 				next if restaurant.street.nil?	
@@ -65,10 +67,12 @@ class MultnomahParser
 		end
 
 		def geocode_multnomah
-			ungeocoded = Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 })
+			# ungeocoded = Restaurant.where(:county => "Multnomah", :loc => {'$size' => 0 })
+			ungeocoded = Restaurant.all(:loc => {:$size => 0 })
 			total = ungeocoded.count
+			puts "TOTES: #{total}"
 			ungeocoded.each_with_index do |r, idx|
-				sleep 0.5
+				# sleep 0.5
 				coords = geocode_restaurant(r)
 				next if coords.nil?
 				lat = coords.first.to_f
