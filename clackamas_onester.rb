@@ -36,13 +36,21 @@ def run_parser(url)
   if m = csz.match(/([A-Z ]*), (OR) (97\d{3})/)
     city = titleize(m[1]).strip
     zip = m[3]
-    restaurant = Restaurant.create(:name => name, :street => street,
-                                   :city => city, :state => state,
-                                   :zip => zip, :county => county)
-
+    # restaurant = Restaurant.create(:name => name, :street => street,
+    #                                :city => city, :state => state,
+    #                                :zip => zip, :county => county)
+    puts "name: #{name}"
+    puts "street: #{street}"
+    puts "city: #{city}"
+    puts "state: #{state}"
+    puts "zip: #{zip}"
   else
-    restaurant = Restaurant.create(:name => name, :state => state, :county => county)
-
+    # restaurant = Restaurant.create(:name => name, :state => state, :county => county)
+    puts "name: #{name}"
+    puts "street: #{street}"
+    puts "city: #{city}"
+    puts "state: #{state}"
+    puts "zip: #{zip}"
   end
 
   inspection_links = report.links.select { |l| l.href =~ /rim\.jsp\?q_ID=\d+/ }
@@ -64,20 +72,25 @@ def run_parser(url)
         vio = k.first.text
         pd = k.last.text
 
-        violations << Violation.new(:violation_text => vio, :point_deduction => pd)
+        # violations << Violation.new(:violation_text => vio, :point_deduction => pd)
+        puts "-------- VIOLATIONS ---------"
+        puts "vio_text: #{vio}"
+        puts "pd: #{pd}"
       end
 
-
-      inspection = Inspection.new(:inspection_date => idate, :score => score.split(":").last.to_i,
+      score = score.split(":").last.to_i
+      inspection = Inspection.new(:inspection_date => idate, :score => score,
                                   :url => i.href, :violations => violations)
-
-      restaurant.inspections << inspection
-      restaurant.save
+      puts "========== INSPECTIONS ============"
+      puts "idate: #{idate}"
+      puts "score: #{score}"
+      puts "url: #{url}"
+      # restaurant.inspections << inspection
+      # restaurant.save
     end
   end
 
 end
 
-# url = "http://www.clackamas.us/healthapp/rim.jsp?q_ID=0310318B&q_iID=349213181"
 url = "http://web3.clackamas.us/healthapp/ri.jsp"
 run_parser(url)
